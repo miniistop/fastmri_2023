@@ -9,8 +9,7 @@ This project implements an advanced MRI reconstruction pipeline that combines en
 Our full pipeline architecture consists of two main modules (Module 1 and Module 2) as shown below:
 
 1. **Module 1: E2E-VarNet Backbone**
-![Module 1: E2E-VarNet Backbone](/docs/images/module1_e2e-varnet_backbone.png)
-![Module 1: Attention VarNet](/docs/images/module1_attention_varnet.png)
+![Module 1: E2E-VarNet Backbone](/docs/images/module1_e2e-varnet_backbone.png) ![Module 1: Attention VarNet](/docs/images/module1_attention_varnet.png)
    - Input: K-space data
    - Output: Initial image reconstruction
    - Components:
