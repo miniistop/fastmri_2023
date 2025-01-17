@@ -8,21 +8,33 @@ This project implements an advanced MRI reconstruction pipeline that combines en
 
 Our full pipeline architecture consists of two main modules (Module 1 and Module 2) as shown below:
 
+
 1. **Module 1: E2E-VarNet Backbone**
-![Module 1: E2E-VarNet Backbone](/docs/images/module1_e2e-varnet_backbone.png) ![Module 1: Attention VarNet](/docs/images/module1_attention_varnet.png)
-   - Input: K-space data
-   - Output: Initial image reconstruction
-   - Components:
-     - Refinement (U-Net → Attention U-Net)
-     - Data consistency
-     - Sensitivity map estimation (U-Net)
+
+Input: K-space data  
+Output: Initial image reconstruction
+
+Components:
+- Refinement (U-Net → Attention U-Net)
+- Data consistency
+- Sensitivity map estimation (U-Net)
+
+### Network Architecture
+![Module 1: E2E-VarNet Backbone](/docs/images/module1_e2e-varnet_backbone.png)
+
+### Attention Block Details
+![Module 1: Attention VarNet](/docs/images/module1_attention_varnet.png)
 
 2. **Module 2: Cross-Domain Feature Fusion Network (CDFFNet)**
+
+Key Features:
+- Custom cross-domain network
+- K-Net: MWCNN
+- I-Net: Attention U-Net (6 layers)
+- Fusion: Softmax-based weighted strategy
+
+### Network Architecture
 ![Module 2: Cross-Domain Feature Fusion Network](/docs/images/module2_cross-domain_feature_fusion_network.png)
-   - Custom cross-domain network
-   - K-Net: MWCNN
-   - I-Net: Attention U-Net (6 layers)
-   - Fusion: Softmax-based weighted strategy
 
 ## Directory Structure
 ```bash
