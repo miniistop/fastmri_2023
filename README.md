@@ -1,93 +1,84 @@
-# 2023 baby varnet
-2023 SNU FastMRI challenge
+# 2023 SNU FastMRI Challenge
 
-### 폴더의 전체 구조
-![image](https://github.com/LISTatSNU/FastMRI_challenge/assets/39179946/f8037437-ea44-458a-8aee-2ca6bd1a16dd)
-* FastMRI_challenge, Data, result 폴더가 위의 구조대로 설정되어 있어야 default argument를 활용할 수 있습니다.
-* 본 github repository는 FastMRI_challenge 폴더입니다.
-* Data 폴더는 MRI data 파일을 담고 있으며 아래에 상세 구조를 첨부하겠습니다.
-* result 폴더는 학습한 모델의 weights을 기록하고 validation, leaderboard dataset의 reconstruction image를 저장하는데 활용되며 아래에 상세 구조를 첨부하겠습니다.
+## Overview
+This project implements an advanced MRI reconstruction pipeline that combines end-to-end variational networks with cross-domain feature fusion. The model combines an E2E-VarNet backbone with a novel cross-domain fusion network to achieve high-quality MRI reconstruction from undersampled k-space data.
 
-### Data 폴더의 구조
-![image](https://github.com/LISTatSNU/FastMRI_challenge/assets/39179946/a010fe28-80aa-46d9-a0df-1bae8443b924)
-* train, val:
-    * train, val 폴더는 각각 모델을 학습(train), 검증(validation)하는데 사용하며 각각 image, kspace 폴더로 나뉩니다.
-    * 참가자들은 generalization과 representation의 trade-off를 고려하여 train, validation의 set을 자유로이 나눌 수 있습니다.
-    * image와 kspace 폴더에 들어있는 파일의 형식은 다음과 같습니다: brain_{mask 형식}_{순번}.h5
-    * ex) brain_acc8_3.h5  
-    * {mask 형식}은 "acc4"과 "acc8" 중 하나입니다.
-    * "acc4"의 경우 {순번}은 1 ~ 203, "acc8"의 경우 {순번}은 1 ~ 204 사이의 숫자입니다. 
-* leaderboard:
-   * **leaderboard는 성능 평가를 위해 활용하는 dataset이므로 절대로 학습 과정에 활용하면 안됩니다.**
-   * leaderboard 폴더는 mask 형식에 따라서 acc4과 acc8 폴더로 나뉩니다.
-   * acc4과 acc8 폴더는 각각 image, kspace 폴더로 나뉩니다.
-   * image와 kspace 폴더에 들어있는 파일의 형식은 다음과 같습니다: brain_test_{순번}.h5
-   * {순번}은 1 ~ 58 사이의 숫자입니다. 
+### Architecture Overview
+![Overall Architecture](/docs/images/overall_architecture.png)
 
-### result 폴더의 구조
-![image](https://github.com/LISTatSNU/FastMRI_challenge/assets/39179946/9f0f05be-3519-4cf2-812c-c08b37db8f53)
+Our full pipeline architecture consists of two main modules (Module 1 and Module 2) as shown below:
 
-* result 폴더는 모델의 이름에 따라서 여러 폴더로 나뉠 수 있습니다.
-* 위 그림에서는 default argument인 test_varnet만 고려했습니다. 
-* test_Unet 폴더는 아래 3개의 폴더로 구성되어 있습니다.
-  * checkpoints - model.pt, best_model.pt의 정보가 있습니다. 모델의 weights 정보를 담고 있습니다.
-  * reconstructions_val - validation dataset의 reconstruction을 저장합니다. brain_{mask 형식}_{순번}.h5 형식입니다. (```train.py``` 참고)
-  * reconstructions_leaderboard - leaderboard dataset의 reconstruction을 저장합니다. brain_test_{순번}.h5 형식입니다. (```evaluation.py``` 참고)
-  * val_loss_log.npy - epoch별로 validation loss를 기록합니다. (```train.py``` 참고)
+**Module 1: E2E-VarNet Backbone**
+![Module 1: E2E-VarNet Backbone](/docs/images/module1_e2e-varnet_backbone.png)
+![Module 1: Attention VarNet](/docs/images/module1_attention_varnet.png)
 
+**Module 2: Cross-Domain Feature Fusion Network**
+![Module 2: Cross-Domain Feature Fusion Network](/docs/images/module2_cross-domain_feature_fusion_network.png)
 
-## 2. 폴더 정보
+Our solution consists of two main modules:
 
+1. **Module 1: E2E-VarNet Backbone**
+   - Input: K-space data
+   - Output: Initial image reconstruction
+   - Components:
+     - Refinement (U-Net → Attention U-Net)
+     - Data consistency
+     - Sensitivity map estimation (U-Net)
+
+2. **Module 2: Cross-Domain Feature Fusion Network (CDFFNet)**
+   - Custom cross-domain network
+   - K-Net: MWCNN
+   - I-Net: Attention U-Net (6 layers)
+   - Fusion: Softmax-based weighted strategy
+
+## Directory Structure
 ```bash
-├── evaluate.py
-├── leaderboard_eval.py
-├── train.py
-└── utils
-│    ├── common
-│    │   ├── loss_function.py
-│    │   └── utils.py
-│    ├── data
-│    │   ├── load_data.py
-│    │   └── transforms.py
-│    ├── learning
-│    │   ├── test_part.py
-│    │   └── train_part.py
-│    └── model
-│        ├── fastmri
-│        │   ├── coil_combine.py
-│        │   ├── data
-│        │   │   ├── __init__.py
-│        │   │   ├── mri_data.py
-│        │   │   ├── README.md
-│        │   │   ├── subsample.py
-│        │   │   ├── transforms.py
-│        │   │   └── volume_sampler.py
-│        │   ├── fftc.py
-│        │   ├── __init__.py
-│        │   ├── losses.py
-│        │   ├── math.py
-│        ├── unet.py
-│        └── varnet.py
-├── Data
-└── result
+├── FastMRI_challenge/  # This repository
+├── Data/
+│   ├── train/
+│   │   ├── image/
+│   │   └── kspace/
+│   ├── val/
+│   │   ├── image/
+│   │   └── kspace/
+│   └── leaderboard/
+│       ├── acc4/
+│       └── acc8/
+└── result/
+    └── [model_name]/
+        ├── checkpoints/
+        ├── reconstructions_val/
+        └── reconstructions_leaderboard/
 ```
 
-## 3. Before you start
-* ```train.py```, ```evaluation.py```, ```leaderboard_eval.py``` 순으로 코드를 실행하면 됩니다.
-* ```train.py```
-   * train/validation을 진행하고 학습한 model의 결과를 result 폴더에 저장합니다.
-   * 가장 성능이 좋은 모델의 weights을 ```best_model.pt```으로 저장합니다. 
-* ```reconstruct.py```
-   * ```train.py```으로 학습한 ```best_model.pt```을 활용해 leader_board dataset을 reconstruction하고 그 결과를 result 폴더에 저장합니다.
-   * acc4와 acc8 옵션을 활용해 두개의 샘플링 마스크(4X, 8X)에 대해서 전부 reconstruction을 실행합니다.
-* ```leaderboard_eval.py```
-   * ```reconstruct.py```을 활용해 생성한 reconstruction의 SSIM을 측정합니다.
-   * acc4와 acc8 옵션을 활용해 두개의 샘플링 마스크(4X, 8X)에 대해서 전부 측정을 합니다.
+### Data Format
+- Training/Validation files: `brain_{mask_type}_{number}.h5`
+  - mask_type: "acc4" or "acc8"
+  - acc4 numbers: 1-203
+  - acc8 numbers: 1-204
+- Leaderboard files: `brain_test_{number}.h5` (numbers 1-58)
 
+## Learning Strategy
 
-## 4. How to set?
+### Data Augmentation
+![Data Augmentation](/docs/images/data_augmentation.png)
+1. Random Data Transformation
+   - Mask shifting (0~7)
+2. 2x Data Augmentation
+   - Acc4 ↔ Acc8 mask change
+   - Expanded from 5,674 to 11,348 slices
+
+### Training Techniques
+- Decoupled learning & Freezing modules: E2E VarNet → CDFFNet
+- Learning Rate: ReduceLROnPlateau scheduler
+- Optimizer: AdamW
+- Gradient accumulation
+- Hyperparameter tuning
+
+## Installation and Setup
+
+### Requirements
 Python 3.8.10
-
 ```bash
 pip install torch
 pip install numpy
@@ -100,27 +91,228 @@ pip install opencv-python
 pip install matplotlib
 ```
 
-## 5. How to train?
+### Usage
+
+1. **Training**
 ```bash
 python train.py
 ```
-- validation할 때, reconstruction data를 ```result/reconstructions_val/```에 저장합니다.
-- epoch 별로 validation dataset에 대한 loss 기록합니다.
+- Saves validation reconstructions to `result/reconstructions_val/`
+- Records per-epoch validation loss
 
-## 6. How to reconstruct?
-```
+2. **Reconstruction**
+```bash
 python reconstruct.py
 ```
-- leaderboard 평가를 위한 reconstruction data를 ```result/reconstructions_leaderboard```에 저장합니다.
+- Generates leaderboard reconstructions in `result/reconstructions_leaderboard/`
 
-## 7. How to evaluate LeaderBoard Dataset?
+3. **Evaluation**
 ```bash
 python leaderboard_eval.py
 ```
-- leaderboard 순위 경쟁을 위한 4X sampling mask, 8X sampling mask에 대한 SSIM 값을 한번에 구합니다. 
+- Calculates SSIM values for both 4X and 8X sampling masks
 
-## 8. What to submit!
-- github repository(코드 실행 방법 readme에 상세 기록)
-- loss 그래프 혹은 기록
-- 모델 weight file
-- 모델 설명 ppt
+## References
+1. Chen, L., et al. "Simple baselines for image restoration." ECCV 2022
+2. Chen, Y., et al. "AI-based reconstruction for fast MRI—A systematic review and meta-analysis." Proceedings of the IEEE 110.2 (2022)
+3. Oktay, O., et al. "Attention u-net: Learning where to look for the pancreas." arXiv:1804.03999 (2018)
+4. Sriram, A., et al. "End-to-end variational networks for accelerated MRI reconstruction." MICCAI 2020
+
+## Submission Package
+- GitHub repository with detailed execution instructions
+- Loss graphs and training records
+- Model weight files
+- Model explanation presentation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Overall Architecture
+![Overall Architecture](./docs/images/overall_architecture.png)
+
+Our complete pipeline architecture consists of two primary modules that work in sequence to achieve optimal MRI reconstruction:
+
+## Our Model
+
+### Module 1: E2E-VarNet Backbone
+Module 1 serves as the backbone of our architecture, utilizing an End-to-End Variational Network approach.
+
+#### Architecture Components:
+![Module 1 Details](./docs/images/module1_details.png)
+
+1. **Base Architecture**
+   - Input: K-space data
+   - Output: Initial image reconstruction
+   - Key Components:
+     - Data Consistency (DC & R)
+     - Sensitivity Map Estimation (SME)
+     - Inverse Fourier Transform (IFT)
+
+2. **Attention U-Net Implementation**
+![Attention U-Net Architecture](./docs/images/module1_attention_varnet.png)
+
+   - Refinement module evolution: U-Net → Attention U-Net (4 layers)
+   - Enhanced feature attention mechanism
+   - Down/Up layers with precise specifications:
+     - Down Layer: (3x3 Conv. + BN + LeakyReLU + DropOut) (x2)
+     - Up Layer: (3x3 Conv. + BN + LeakyReLU + DropOut) (x2) + 1X1 Conv.
+
+### Module 2: Cross-Domain Feature Fusion Network (CDFFNet)
+![CDFFNet Architecture](./assets/images/cdf_architecture.png)
+
+Our custom cross-domain network incorporates:
+- K-Net: Multi-Level Wavelet CNN (MWCNN)
+- I-Net: Attention U-Net (6 layers)
+- Fusion: Softmax-based weighted strategy
+- Dual-domain processing with FT/IFT operations
+
+## Learning Strategy
+
+### Data Augmentation
+![Data Augmentation Strategy](./assets/images/data_augmentation.png)
+
+1. **Random Data Transformation**
+   - Mask shifting (range: 0-7)
+   - Enhanced sampling diversity
+
+2. **2x Data Augmentation**
+   - Acc4 ↔ Acc8 mask interchange
+   - Dataset expansion: 5,674 → 11,348 slices
+
+### Training Techniques
+1. **Advanced Learning Strategy**
+   - Decoupled learning & Freezing modules: E2E VarNet → CDFFNet
+   - Learning Rate: ReduceLROnPlateau scheduler
+   - Optimizer: AdamW
+   - Gradient accumulation
+   
+2. **Data Handling Optimizations**
+   - Adjusting data composition (Acc8:Acc4 = 6:4)
+   - 2x gradient for challenging tasks (Slice index #0-#3; eye level)
+   - K-space data structure unification for batch learning (# of Coil = 20)
+
+
+
+### Architecture Overview
+![Overall Architecture](path/to/architecture.png)
+
+Our solution consists of two main modules:
+
+1. **Module 1: E2E-VarNet Backbone**
+   - Input: K-space data
+   - Output: Initial image reconstruction
+   - Components:
+     - Refinement (U-Net → Attention U-Net)
+     - Data consistency
+     - Sensitivity map estimation (U-Net)
+
+2. **Module 2: Cross-Domain Feature Fusion Network (CDFFNet)**
+   - Custom cross-domain network
+   - K-Net: MWCNN
+   - I-Net: Attention U-Net (6 layers)
+   - Fusion: Softmax-based weighted strategy
+
+## Directory Structure
+```bash
+├── FastMRI_challenge/  # This repository
+├── Data/
+│   ├── train/
+│   │   ├── image/
+│   │   └── kspace/
+│   ├── val/
+│   │   ├── image/
+│   │   └── kspace/
+│   └── leaderboard/
+│       ├── acc4/
+│       └── acc8/
+└── result/
+    └── [model_name]/
+        ├── checkpoints/
+        ├── reconstructions_val/
+        └── reconstructions_leaderboard/
+```
+
+### Data Format
+- Training/Validation files: `brain_{mask_type}_{number}.h5`
+  - mask_type: "acc4" or "acc8"
+  - acc4 numbers: 1-203
+  - acc8 numbers: 1-204
+- Leaderboard files: `brain_test_{number}.h5` (numbers 1-58)
+
+## Learning Strategy
+
+### Data Augmentation
+1. Random Data Transformation
+   - Mask shifting (0~7)
+2. 2x Data Augmentation
+   - Acc4 ↔ Acc8 mask change
+   - Expanded from 5,674 to 11,348 slices
+
+### Training Techniques
+- Decoupled learning & Freezing modules: E2E VarNet → CDFFNet
+- Learning Rate: ReduceLROnPlateau scheduler
+- Optimizer: AdamW
+- Gradient accumulation
+- Hyperparameter tuning
+
+## Installation and Setup
+
+### Requirements
+Python 3.8.10
+```bash
+pip install torch
+pip install numpy
+pip install requests
+pip install tqdm
+pip install h5py
+pip install scikit-image
+pip install pyyaml
+pip install opencv-python
+pip install matplotlib
+```
+
+### Usage
+
+1. **Training**
+```bash
+python train.py
+```
+- Saves validation reconstructions to `result/reconstructions_val/`
+- Records per-epoch validation loss
+
+2. **Reconstruction**
+```bash
+python reconstruct.py
+```
+- Generates leaderboard reconstructions in `result/reconstructions_leaderboard/`
+
+3. **Evaluation**
+```bash
+python leaderboard_eval.py
+```
+- Calculates SSIM values for both 4X and 8X sampling masks
+
+## References
+1. Chen, L., et al. "Simple baselines for image restoration." ECCV 2022
+2. Chen, Y., et al. "AI-based reconstruction for fast MRI—A systematic review and meta-analysis." Proceedings of the IEEE 110.2 (2022)
+3. Oktay, O., et al. "Attention u-net: Learning where to look for the pancreas." arXiv:1804.03999 (2018)
+4. Sriram, A., et al. "End-to-end variational networks for accelerated MRI reconstruction." MICCAI 2020
+
+## Submission Package
+- GitHub repository with detailed execution instructions
+- Loss graphs and training records
+- Model weight files
+- Model explanation presentation
